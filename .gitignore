@@ -1,0 +1,25 @@
+# General
+.DS_Store
+*.log
+logs
+coverage
+
+# Node/JS projects (recursive)
+**/node_modules
+**/.next
+**/out
+**/dist
+
+# Env files (recursive)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Editor/OS
+.vscode/
+.idea/
+*.swp
+
