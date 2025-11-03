@@ -14,12 +14,18 @@ services:
       - pg_data:/var/lib/postgresql/data
       - ./seed/schema.sql:/docker-entrypoint-initdb.d/00_schema.sql:ro
       - ./seed/seed.sql:/docker-entrypoint-initdb.d/10_seed.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   directus:
     image: directus/directus:10
     container_name: leapy_directus
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
       - "${PORT:-8055}:8055"
     environment:
