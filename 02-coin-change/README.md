@@ -1,47 +1,73 @@
-# Desafio 02 — Coin Change
+# Coin Change - Solução
 
-Implemente uma solução para o problema de Coin Change. Linguagem livre, mas você deve fornecer um `Dockerfile` e um `runner.yml` descrevendo como executar sua solução via CLI.
+## Meu Raciocínio
 
-## Contrato de I/O (obrigatório)
+O problema é encontrar o número **mínimo** de moedas necessárias para formar um valor determinado. 
 
-- Entrada (stdin) JSON: `{ "coins": number[], "amount": number }`
-- Saída (stdout) JSON: `{ "minCoins": number }`
+A primeira ideia que tive foi tentar todas as combinações possíveis, mas isso seria muito lento. Então pensei em usar **programação dinâmica**.
 
-Exemplo:
+### Ideia Principal
 
-```json
-{ "coins": [1, 2, 5], "amount": 11 }
-```
+A ideia é resolver o problema de forma gradual, do menor para o maior:
 
-```json
-{ "minCoins": 3 }
-```
+1. Primeiro descobrir quantas moedas preciso para formar 1
+2. Depois quantas preciso para formar 2
+3. E assim por diante até chegar no valor que quero
 
-## Como rodar os testes
+### Como funciona
 
-Localmente:
+Para formar um valor qualquer, eu posso usar qualquer moeda disponível:
+- Se uso uma moeda de 5 para formar 11, sobra 6
+- Se já sei quantas moedas preciso para formar 6, só preciso somar +1 (a moeda que usei)
+- Escolho a opção que usa **menos moedas no total**
+
+### Exemplo prático
+
+Com `coins = [1, 2, 5]` e `amount = 11`:
+
+- Para formar 1: preciso de 1 moeda de 1
+- Para formar 2: posso usar 1 moeda de 2 (melhor que 2 moedas de 1)
+- Para formar 3: posso usar 1 moeda de 2 + 1 moeda de 1 = 2 moedas
+- Para formar 11: posso usar 2 moedas de 5 + 1 moeda de 1 = 3 moedas ✓
+
+### Implementação
+
+Crio um array `dp` onde:
+- `dp[i]` = número mínimo de moedas para formar o valor `i`
+- Começo com `null` (ainda não sei a resposta)
+- `dp[0] = 0` (caso base: para formar 0, preciso de 0 moedas)
+
+Para cada valor de 1 até `amount`, tento usar cada moeda disponível e guardo a melhor solução encontrada.
+
+Se no final `dp[amount]` ainda for `null`, significa que é impossível formar aquele valor, então retorno `-1`.
+
+## Como rodar
+
+### Testes locais
 
 ```bash
 npm install
 npm test
 ```
 
-No CI (GitHub Actions) os testes serão executados automaticamente ao abrir o PR.
+### Executar com Docker
 
-## Requisitos
+Construir a imagem:
 
-- Fornecer `Dockerfile` que constrói uma imagem capaz de executar o comando definido em `runner.yml`.
-- Manter o contrato de I/O e saída estritamente conforme descrito.
-- Opcional: testes próprios adicionais e documentação.
+```bash
+docker build -t coin-change .
+```
 
-## Arquivos fornecidos
+Executar um caso de teste:
 
-- `tests/cases.json` — casos de teste oficiais
-- `tests/harness.js` — test runner genérico
-- `runner.yml` — contrato do comando de execução
+```bash
+echo '{"coins":[1,2,5],"amount":11}' | docker run -i --rm coin-change
+```
 
-## Observações importantes
+Saída esperada: `{"minCoins":3}`
 
-- Você deve propor e implementar sua própria solução. Nenhum código de solução está incluído neste repositório.
-- Garanta que sua solução siga o contrato de I/O descrito acima.
-- O `Dockerfile` deve ser capaz de construir uma imagem que execute o comando definido em `runner.yml`.
+### Executar manualmente
+
+```bash
+echo '{"coins":[1,2,5],"amount":11}' | node solution.js
+```
