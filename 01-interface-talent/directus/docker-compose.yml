@@ -42,6 +42,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
       DIRECTUS_EXPERIMENTAL_GRAPHQL_INTROSPECTION: "true"
       EXTENSIONS_AUTO_RELOAD: "true"
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: "http://localhost:3000"
     volumes:
       - ./extensions:/directus/extensions
 
