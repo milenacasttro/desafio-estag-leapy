@@ -262,6 +262,84 @@ export default function TalentList() {
     setDebouncedSearch("");
   };
 
+  const exportToCSV = () => {
+    if (talents.length === 0) {
+      alert("Não há dados para exportar.");
+      return;
+    }
+
+    const headers = [
+      "Departamento",
+      "Status",
+      "Orchestrator State",
+      "PDI Pronto",
+      "Data Atualização",
+      "Líder - Departamento",
+      "Líder - Posição",
+      "Role Alvo",
+      "Email"
+    ];
+
+    const rows = talents.map((talent) => {
+      const leaderDept = talent.leader_id && typeof talent.leader_id === 'object' 
+        ? (talent.leader_id.department || "—") 
+        : "—";
+      const leaderPos = talent.leader_id && typeof talent.leader_id === 'object' 
+        ? (talent.leader_id.position || "—") 
+        : "—";
+      const roleName = talent.target_role_id && typeof talent.target_role_id === 'object' 
+        ? talent.target_role_id.name 
+        : "—";
+      const email = talent.user_id && typeof talent.user_id === 'object' && talent.user_id.email 
+        ? talent.user_id.email 
+        : "—";
+      const dateUpdated = talent.date_updated 
+        ? new Date(talent.date_updated).toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+          })
+        : "—";
+
+      return [
+        talent.department || "—",
+        talent.current_status || "—",
+        talent.orchestrator_state || "—",
+        talent.pdi_plan_ready ? "Sim" : "Não",
+        dateUpdated,
+        leaderDept,
+        leaderPos,
+        roleName,
+        email
+      ];
+    });
+
+    const escapeCSV = (value: string) => {
+      if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map(row => row.map(escapeCSV).join(","))
+    ].join("\n");
+
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    link.setAttribute("href", url);
+    link.setAttribute("download", `talentos_${timestamp}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const hasActiveFilters = useMemo(() => {
     return Object.values(filters).some(v => v !== "") || debouncedSearch !== "";
   }, [filters, debouncedSearch]);
@@ -310,9 +388,10 @@ export default function TalentList() {
             </button>
           )}
           <button
-            onClick={() => alert("Funcionalidade de exportação em desenvolvimento")}
-            aria-label="Exportar dados"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-green-600 rounded hover:bg-green-700 transition-colors whitespace-nowrap"
+            onClick={exportToCSV}
+            aria-label="Exportar dados para CSV"
+            disabled={talents.length === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-green-600 rounded hover:bg-green-700 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
