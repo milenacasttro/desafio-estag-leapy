@@ -58,3 +58,22 @@ INSERT INTO directus_permissions (
     '*'
 ) ON CONFLICT DO NOTHING;
 
+-- Permissão para directus_users (necessário para busca por email)
+INSERT INTO directus_permissions (
+    role,
+    collection,
+    action,
+    permissions,
+    validation,
+    presets,
+    fields
+) VALUES (
+    NULL,
+    'directus_users',
+    'read',
+    '{}',
+    NULL,
+    NULL,
+    'id,email'
+) ON CONFLICT DO NOTHING;
+
