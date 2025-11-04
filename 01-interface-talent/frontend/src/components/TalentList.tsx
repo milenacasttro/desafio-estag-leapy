@@ -41,6 +41,25 @@ export default function TalentList() {
     setDebouncedSearch(value);
   }, 500);
 
+  const getStatusColor = (status: string | null): string => {
+    if (!status) return "bg-gray-100 text-gray-700";
+    
+    const statusUpper = status.toUpperCase();
+    
+    switch (statusUpper) {
+      case "ONBOARDING":
+        return "bg-blue-50 text-blue-800 border border-blue-200";
+      case "PENDING":
+        return "bg-amber-50 text-amber-800 border border-amber-200";
+      case "ACTIVE":
+        return "bg-emerald-50 text-emerald-800 border border-emerald-200";
+      case "PENDING_FIRST_ACCESS":
+        return "bg-indigo-50 text-indigo-800 border border-indigo-200";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
   useEffect(() => {
     debouncedSearchHandler(search);
   }, [search, debouncedSearchHandler]);
@@ -565,7 +584,7 @@ export default function TalentList() {
                       </td>
                       <td className="px-2 py-1 whitespace-nowrap">
                         {talent.current_status ? (
-                          <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[10px] font-medium">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusColor(talent.current_status)}`}>
                             {talent.current_status}
                           </span>
                         ) : (
@@ -574,7 +593,7 @@ export default function TalentList() {
                       </td>
                       <td className="px-2 py-1 whitespace-nowrap">
                         {talent.orchestrator_state ? (
-                          <span className="px-1.5 py-0.5 bg-green-50 text-green-700 rounded-full text-[10px] font-medium">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusColor(talent.orchestrator_state)}`}>
                             {talent.orchestrator_state}
                           </span>
                         ) : (
@@ -583,7 +602,7 @@ export default function TalentList() {
                       </td>
                       <td className="px-2 py-1 whitespace-nowrap">
                         {talent.pdi_plan_ready ? (
-                          <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-medium">
+                          <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-[10px] font-medium">
                             Pronto
                           </span>
                         ) : (

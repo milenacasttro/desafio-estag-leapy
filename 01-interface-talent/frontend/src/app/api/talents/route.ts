@@ -6,16 +6,65 @@ export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
 
+        const emailFilter = searchParams.get('filter[user_id][email][_icontains]');
+
+        let userIds: string[] = [];
+
+        if (emailFilter) {
+            const usersParams = new URLSearchParams({
+                'filter[email][_icontains]': emailFilter,
+                fields: 'id',
+                limit: '1000',
+            });
+
+            const usersUrl = new URL('/users', DIRECTUS_URL);
+            usersUrl.search = usersParams.toString();
+
+            try {
+                const usersRes = await fetch(usersUrl.toString(), {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    cache: 'no-store',
+                });
+
+                if (usersRes.ok) {
+                    const usersData = await usersRes.json();
+                    userIds = usersData.data?.map((user: any) => user.id) || [];
+                }
+            } catch (err) {
+                console.error('Error fetching users:', err);
+            }
+
+            if (userIds.length === 0) {
+                return NextResponse.json({
+                    data: [],
+                    meta: {
+                        total_count: 0,
+                        filter_count: 0,
+                    },
+                });
+            }
+        }
+
         const params = new URLSearchParams();
         searchParams.forEach((value, key) => {
-            params.append(key, value);
+            if (!key.startsWith('filter[user_id][email]')) {
+                params.append(key, value);
+            }
         });
+
+        if (userIds.length > 0) {
+            userIds.forEach((userId) => {
+                params.append('filter[user_id][_in][]', userId);
+            });
+        }
 
         if (!searchParams.has('meta')) {
             params.append('meta', '*');
         }
 
-        if (searchParams.has('filter[user_id][email][_icontains]') && !searchParams.has('fields')) {
+        if (!searchParams.has('fields')) {
             params.append('fields', '*,user_id.email');
         }
 
