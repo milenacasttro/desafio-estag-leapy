@@ -293,15 +293,17 @@ export default function TalentList() {
               placeholder="Pesquise por email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              aria-label="Pesquisar talentos por email"
               className="block w-full pl-8 pr-2 py-1.5 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent text-xs"
             />
           </div>
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
+              aria-label="Limpar todos os filtros"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors whitespace-nowrap"
             >
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
               Limpar filtros
@@ -309,9 +311,10 @@ export default function TalentList() {
           )}
           <button
             onClick={() => alert("Funcionalidade de exportação em desenvolvimento")}
+            aria-label="Exportar dados"
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-green-600 rounded hover:bg-green-700 transition-colors whitespace-nowrap"
           >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             Exportar
@@ -513,6 +516,7 @@ export default function TalentList() {
                         type="checkbox"
                         checked={selectedRows.size === talents.length && talents.length > 0}
                         onChange={(e) => handleSelectAll(e.target.checked)}
+                        aria-label="Selecionar todos os talentos"
                         className="rounded border-gray-300 text-green-600 focus:ring-green-500 w-3 h-3"
                       />
                     </th>
