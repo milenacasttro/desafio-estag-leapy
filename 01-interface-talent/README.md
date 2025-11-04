@@ -1,90 +1,221 @@
-# Desafio 01 — Interface de Talentos
+# Interface de Talentos
 
-Construa uma interface com lista de talentos, filtros e paginação usando os dados do Postgres/Directus deste projeto (bônus por usar Next.js).
-
-Você deve fornecer instruções claras de como rodar o projeto (back + front). Sem essas instruções, o projeto não será avaliado.
-
-## Objetivo
-
-- Listagem de talentos com:
-  - Barra de busca por `directus_users.email` (via join com `talents.user_id -> directus_users.id`)
-  - Filtros (quanto mais, melhor pontuação):
-    - `department`, `current_status`, `pdi_plan_ready`, `orchestrator_state`
-    - intervalo `start_date`/`end_date`
-    - `leader_id`, `target_role_id`
-  - Ordenação: por `date_updated` (desc) e opcionalmente outras
-  - Paginação server-side
-- Exibir contagem de resultados, estado de carregamento e erros
-- Responsividade e acessibilidade
+Interface web para listagem de talentos com busca, filtros avançados e paginação, desenvolvida com Next.js e TypeScript, utilizando Directus como backend.
 
 ## Stack
 
-- Backend de dados: Postgres + Directus (fornecidos via docker-compose)
-- Frontend: livre (bônus: Next.js + TypeScript)
-- Integração: usar API REST/GraphQL do Directus ou um BFF (ex.: Next.js Route Handlers)
+- **Backend**: PostgreSQL + Directus (via Docker Compose)
+- **Frontend**: Next.js 16 + TypeScript + Tailwind CSS
+- **Integração**: Next.js API Routes (BFF) para evitar CORS e melhorar segurança
+
+## Funcionalidades Implementadas
+
+- **Listagem de talentos**: Tabela com todos os campos relevantes
+- **Busca por email**: Busca por `directus_users.email` via relacionamento com `talents.user_id`
+- **Filtros**:
+  - `department`, `current_status`, `pdi_plan_ready`, `orchestrator_state`
+  - Intervalo de datas (`start_date`/`end_date`)
+  - `leader_id`, `target_role_id`
+- **Ordenação**: Por `date_updated` (desc) e outras colunas (clique nos headers)
+- **Paginação server-side**: Com limite configurável (5, 10, 20, 50)
+- **Exportação CSV**: Exporta os dados visíveis (com filtros aplicados) para arquivo CSV com encoding UTF-8 (compatível com Excel)
+- **Estados de UI**: Loading, erro e estados vazios
+- **Responsividade**: Layout adaptável com scroll interno na tabela
+- **Acessibilidade**: ARIA labels básicos implementados
 
 ## Como rodar localmente
 
-1. Pré-requisitos: Docker e Docker Compose
-2. Copie o env exemplo e ajuste portas/credenciais se necessário:
+### Pré-requisitos
 
+- Docker e Docker Compose instalados
+- Node.js 18+ e npm instalados
+
+### Backend (Directus + PostgreSQL)
+
+1. Navegue até a pasta do projeto:
 ```bash
-cp directus/.env.example directus/.env
+cd 01-interface-talent
 ```
 
-3. Suba os serviços:
+2. (Opcional) Crie um arquivo `.env` na pasta `directus` para customizar as configurações:
+```bash
+# Windows PowerShell
+New-Item -Path directus/.env -ItemType File
 
+# Linux/Mac
+touch directus/.env
+```
+
+3. Adicione as variáveis de ambiente no arquivo `directus/.env` (valores padrão já estão no docker-compose.yml, mas você pode customizar):
+```env
+# PostgreSQL
+POSTGRES_PASSWORD=postgres
+POSTGRES_USER=postgres
+POSTGRES_DB=leapy
+POSTGRES_PORT=5432
+
+# Directus
+PORT=8055
+KEY=supersecretkey
+SECRET=supersecretsecret
+PUBLIC_URL=http://localhost:8055
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin
+
+# CORS (ajuste se necessário)
+CORS_ENABLED=true
+CORS_ORIGIN=http://localhost:3000
+```
+
+**Nota**: Se você não criar o arquivo `.env`, o docker-compose.yml usará os valores padrão indicados acima.
+
+4. Suba os serviços Docker:
 ```bash
 docker compose -f directus/docker-compose.yml up -d --build
 ```
 
-4. Aguarde o Directus iniciar. O `schema.sql` e `seed.sql` serão aplicados automaticamente (ver compose).
-5. Use os exemplos em `api/rest.http` para testar endpoints/filters.
+5. Aguarde o Directus iniciar completamente (pode levar alguns minutos na primeira vez). O `schema.sql` e `seed.sql` serão aplicados automaticamente.
+
+6. Configure as permissões públicas (necessário para o frontend funcionar sem autenticação):
+```bash
+# No PowerShell (Windows)
+Get-Content directus/setup-public-access.sql | docker exec -i leapy_pg psql -U postgres -d leapy
+
+# No Linux/Mac
+docker exec -i leapy_pg psql -U postgres -d leapy < directus/setup-public-access.sql
+```
+
+7. Verifique se os serviços estão rodando:
+```bash
+docker ps
+```
+
+Você deve ver os containers `leapy_pg` e `leapy_directus` rodando.
+
+8. Acesse o Directus Admin em: http://localhost:8055
+   - Email: `admin@example.com`
+   - Senha: `admin`
+
+### Frontend (Next.js)
+
+1. Navegue até a pasta do frontend:
+```bash
+cd frontend
+```
+
+2. Instale as dependências:
+```bash
+npm install
+```
+
+3. Crie o arquivo `.env.local` na pasta `frontend`:
+```bash
+# Windows PowerShell
+New-Item -Path .env.local -ItemType File
+
+# Linux/Mac
+touch .env.local
+```
+
+4. Adicione as variáveis de ambiente no arquivo `.env.local`:
+```env
+# URL do Directus (backend)
+# Ajuste a porta se você customizou no docker-compose.yml
+NEXT_PUBLIC_DIRECTUS_URL=http://localhost:8055
+```
+
+**Nota**: O arquivo `.env.local` é necessário para o frontend funcionar. Ele não deve ser commitado no Git (já está no .gitignore).
+
+5. Inicie o servidor de desenvolvimento:
+```bash
+npm run dev
+```
+
+6. Acesse a aplicação em: http://localhost:3000
+
+### Verificação
+
+- Backend: http://localhost:8055 (Directus Admin)
+- Frontend: http://localhost:3000 (Interface de Talentos)
+- API de exemplo: Use os exemplos em `api/rest.http` para testar endpoints/filters
 
 ## Esquema e Dados
 
-- Os schemas reais estão em `directus/seed/schema.sql`:
+- Os schemas estão em `directus/seed/schema.sql`:
   - `public.talents`
   - `public.internship_leaders`
   - `public.target_roles`
   - (o Directus provisiona `directus_users`)
-- Os dados fictícios devem ser gerados em `directus/seed/seed.sql` (~100 talentos, com relacionamentos válidos).
+- Os dados fictícios estão em `directus/seed/seed.sql` (~100 talentos, com relacionamentos válidos).
 
-Observação: candidatos que não usarem Directus devem criar uma tabela de usuários compatível com o campo de busca por email (join por `user_id`).
+**Observação sobre busca por email**: Os `user_id` dos talents no seed são UUIDs aleatórios que não correspondem a usuários reais no Directus. Por isso, a busca por email não retorna resultados na prática, embora a funcionalidade esteja implementada corretamente. Para testar a busca, seria necessário criar usuários reais no Directus e associá-los aos talents.
 
-## Directus — Dicas e Referências
+## Decisões Técnicas
 
-- Documentação oficial: [Directus Documentation](https://directus.io/docs/)
-- API: consulte os endpoints REST/GraphQL e autenticação (tokens) na doc.
-- Busca por email: é comum expor o relacionamento com usuários via `fields=*,user_id.email`.
-- CORS/ENV: ajuste `PUBLIC_URL`, tokens e origens conforme seu frontend.
+### Arquitetura
 
-## Extensions Customizadas (Opcional)
+- **Next.js App Router**: Escolhido para aproveitar Server Components e melhor performance
+- **API Routes como BFF**: Implementado para evitar problemas de CORS e permitir lógica server-side (ex: busca por email via dois passos)
+- **TypeScript**: Usado para type safety e melhor DX
 
-Você pode estender o Directus criando extensions customizadas no diretório `directus/extensions/`.
+### Busca por Email
 
-### Tipos de Extensions Disponíveis
+- **Problema**: Directus não permite filtrar diretamente por campos de relações aninhadas (`filter[user_id][email][_icontains]`) mesmo com permissões públicas
+- **Solução**: Implementada busca em dois passos:
+  1. Busca usuários por email usando `/users`
+  2. Filtra talents pelos IDs dos usuários encontrados usando `filter[user_id][_in][]`
 
-- **API Endpoints**: [criar rotas API customizadas](https://directus.io/docs/guides/extensions/api-extensions/endpoints)
-- **Event Hooks**: [executar código durante eventos](https://directus.io/docs/guides/extensions/api-extensions/hooks)
-- **Bundles**: [agrupar múltiplas extensions](https://directus.io/docs/guides/extensions/bundles)
+### Permissões Públicas
 
-Consulte `directus/extensions/README.md` para instruções detalhadas sobre como criar e desenvolver extensions.
+- **Decisão**: Configurar permissões públicas para desenvolvimento local (não recomendado para produção)
+- **Implementação**: Script SQL (`setup-public-access.sql`) que configura permissões de leitura para todas as coleções necessárias
 
-**Nota**: Extensions são opcionais mas são valorizadas na avaliação, especialmente para cenários que requerem lógica de backend customizada além da API padrão do Directus.
+### Performance
 
-## Requisitos Técnicos
+- **Debounce**: 500ms para busca por email, reduzindo requisições desnecessárias
+- **Carregamento de filtros**: Opções de filtros carregadas uma vez no mount, evitando múltiplas requisições (evita N+1)
+- **Transições suaves**: Implementado `isTransitioning` para evitar "flickering" durante atualizações
+- **Paginação server-side**: Implementada via API routes para carregar apenas os dados necessários
 
-- Debounce na busca, paginação server-side, evitar N+1
-- Tratamento de erros e estados vazios
-- Qualidade de código, organização e documentação
-- CORS e ENV configurados corretamente para integração frontend-backend
+## Estrutura do Projeto
 
-## Entrega
+```
+01-interface-talent/
+├── directus/
+│   ├── docker-compose.yml       # Configuração do Docker
+│   ├── setup-public-access.sql  # Script de permissões públicas
+│   └── seed/
+│       ├── schema.sql           # Estrutura do banco de dados
+│       └── seed.sql              # Dados fictícios
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── api/talents/     # API Routes (BFF)
+│   │   │   ├── page.tsx         # Página principal
+│   │   │   └── layout.tsx       # Layout raiz
+│   │   ├── components/
+│   │   │   └── TalentList.tsx  # Componente principal
+│   │   └── lib/
+│   │       └── directus.ts      # Cliente e tipos TypeScript
+│   └── package.json
+└── api/
+    └── rest.http                 # Exemplos de endpoints
+```
 
-- Código + README com instruções claras de setup (back + front), variáveis de ambiente e scripts. Sem essas instruções, o projeto não será avaliado
-- Abra um PR com descrição das decisões, trade-offs e, se possível, screenshots/GIFs
+## Melhorias Futuras
+
+1. **Acessibilidade**: Adicionar navegação por teclado completa e melhor suporte a leitores de tela
+2. **Testes**: Implementar testes unitários e de integração
+3. **Autenticação**: Implementar autenticação real ao invés de permissões públicas
+4. **Validação de dados**: Adicionar validação de formulários e feedback visual mais robusto
+5. **Internacionalização**: Suporte a múltiplos idiomas
+6. **Exportação**: Adicionar suporte a outros formatos (Excel, JSON) além de CSV
 
 ## Exemplos de Endpoints
 
 Consulte `api/rest.http` para exemplos de filtros, paginação e join para buscar por email.
+
+## Referências
+
+- [Directus Documentation](https://directus.io/docs/)
+- [Next.js Documentation](https://nextjs.org/docs)
