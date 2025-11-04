@@ -1,8 +1,11 @@
+import TalentList from "@/components/TalentList";
+
 export default function Home() {
   return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Interface de Talentos</h1>
-      {/* Implemente sua página aqui */}
+    <main className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-[95%] mx-auto">
+        <TalentList />
+      </div>
     </main>
   );
 }
